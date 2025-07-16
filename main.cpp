@@ -235,7 +235,7 @@ int main() {
     StringConst logo;
 
     system("clear");
-    cout << "Hello" << endl;
+    cout << "Guys Yongjin gay." << endl;
     cout << logo.LOGO_X << endl << endl;;
     cout << logo.LOGO_O << endl;
     cout.flush();
