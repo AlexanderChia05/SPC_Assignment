@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <limits>
 #include <ctime>
+#include <regex>
 using namespace std;
 
 // Struct definitions
@@ -31,8 +32,9 @@ struct Person {
     }
 };
 
-struct Vendor : public Person {
+struct Vendor {
     int vendorID = 0;
+    Person person;
     string vendorType;
     float cost = 0;
 
@@ -43,15 +45,15 @@ struct Vendor : public Person {
             stringstream ss(line);
             ss >> vendorID; ss.ignore();
             getline(ss, vendorType, ',');
-            getline(ss, name, ',');
-            getline(ss, email, ',');
-            getline(ss, contact, ',');
+            getline(ss, person.name, ',');
+            getline(ss, person.email, ',');
+            getline(ss, person.contact, ',');
             ss >> cost;
         }
     }
 
     void toString(string& line) const {
-        line = to_string(vendorID) + "," + vendorType + "," + name + "," + email + "," + contact + "," + to_string(cost);
+        line = to_string(vendorID) + "," + vendorType + "," + person.name + "," + person.email + "," + person.contact + "," + to_string(cost);
     }
 };
 
@@ -513,6 +515,20 @@ struct StringConst {
         " +-----------------------------------------+  \n"
         " | 0. Back to Event Monitoring             |  \n"
         " +-----------------------------------------+    ";
+
+
+    const string SearchMenu =
+        " +-----------------------------------------+  \n"
+        " |    Search Functionality                 |  \n"
+        " +-----------------------------------------+  \n"
+        " | 1. Search Client                        |  \n"
+        " +-----------------------------------------+  \n"
+        " | 2. Search Event                         |  \n"
+        " +-----------------------------------------+  \n"
+        " | 3. Search Vendor                        |  \n"
+        " +-----------------------------------------+  \n"
+        " | 0. Back to Main Menu                    |  \n"
+        " +-----------------------------------------+    ";
 };
 
 // Template function to read things
@@ -551,6 +567,7 @@ void saveList(const vector<T>& list, const string& filename) {
 
 // Function declarations
 bool login();
+bool isValidDate(const string& date);
 void showLoginScreen();
 void showMainScreen();
 void manageClient();
@@ -559,11 +576,12 @@ void managePackage();
 void manageVenue();
 void manageCatering();
 void manageVendor();
-void managePayment();           
+void managePayment();
 void manageAdmin();
 void manageEventMonitoring();
 void manageGuests();
 void manageEventSchedule();
+// void searchFun();
 
 // Login function
 bool login() {
@@ -584,6 +602,11 @@ bool login() {
 
     cout << "Invalid username or password." << endl;
     return false;
+}
+
+bool isValidDate(const string& date) {
+    regex datePattern(R"(\d{4}-\d{2}-\d{2})");
+    return regex_match(date, datePattern);
 }
 
 void showLoginScreen() {
@@ -644,6 +667,9 @@ void showMainScreen() {
         case 6:
             manageEventMonitoring();
             break;
+        case 7:
+            //searchFun();
+            break;
         default:
             cout << "Invalid option. Please try again." << endl;
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -697,6 +723,10 @@ void manageClient() {
         getline(cin, newClient.person.contact);
         cout << "Enter wedding date (YYYY-MM-DD): ";
         getline(cin, newClient.weddingDate);
+        while (!isValidDate(newClient.weddingDate)) {
+            cout << "Invalid date format. Enter YYYY-MM-DD: ";
+            getline(cin, newClient.weddingDate);
+        }
         cout << "Enter special request: ";
         getline(cin, newClient.specialRequest);
         cout << "Enter estimated number of guests: ";
@@ -774,7 +804,7 @@ void manageClient() {
         if (!vendorList.empty()) {
             cout << "\nAvailable Vendors:\n";
             for (size_t i = 0; i < vendorList.size(); ++i) {
-                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].name
+                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].person.name
                     << " (Cost: $" << fixed << setprecision(2) << vendorList[i].cost << ")\n";
             }
             cout << "\nEnter vendor numbers to select (e.g., 1 2 3, 0 to finish): ";
@@ -785,7 +815,7 @@ void manageClient() {
             size_t vendorChoice;
             while (vendorStream >> vendorChoice) {
                 if (vendorChoice > 0 && vendorChoice <= vendorList.size()) {
-                    newClient.selectedVendors.push_back(vendorList[vendorChoice - 1].name);
+                    newClient.selectedVendors.push_back(vendorList[vendorChoice - 1].person.name);
                     newClient.totalPayment += vendorList[vendorChoice - 1].cost;
                 }
             }
@@ -830,9 +860,9 @@ void manageClient() {
         // Set real-time payment date using localtime_s
         time_t now = time(0);
         struct tm ltm;
-        localtime_s(&ltm, &now);
+        localtime_s(&ltm, &now); // Fixed: Replaced <m with &ltm
         char dateStr[11];
-        sprintf_s(dateStr, sizeof(dateStr), "%04d-%02d-%02d", 1900 + ltm.tm_year, 1 + ltm.tm_mon, ltm.tm_mday);
+        strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", &ltm); // Use strftime for safer formatting
         newPayment.paymentDate = string(dateStr);
 
         // Create Payment Record
@@ -843,8 +873,27 @@ void manageClient() {
         paymentList.push_back(newPayment);
         saveList(paymentList, "payments.csv");
 
-        // Placeholder for INVOICE (to be implemented by you)
-        cout << "\n[INVOICE Placeholder - To be implemented]\n";
+        // Simple Invoice Implementation
+        cout << "\n=== INVOICE ===" << endl;
+        cout << "Client: " << newClient.person.name << endl;
+        cout << "Wedding Date: " << newClient.weddingDate << endl;
+        cout << "Venue: " << newClient.venueBooked << endl;
+        cout << "Catering: " << newClient.cateringSelected << endl;
+        cout << "Vendors: ";
+        if (newClient.selectedVendors.empty()) {
+            cout << "None";
+        }
+        else {
+            for (size_t i = 0; i < newClient.selectedVendors.size(); ++i) {
+                cout << newClient.selectedVendors[i];
+                if (i < newClient.selectedVendors.size() - 1) cout << ", ";
+            }
+        }
+        cout << endl;
+        cout << "Total Payment: $" << fixed << setprecision(2) << newClient.totalPayment << endl;
+        cout << "Amount Paid: $" << fixed << setprecision(2) << newClient.amountPaid << endl;
+        cout << "Payment Status: " << newClient.paymentStatus << endl;
+        cout << "===============" << endl;
 
         // Save Client
         newClient.clientID = newPayment.clientID;
@@ -922,6 +971,10 @@ void manageClient() {
         getline(cin, clientList[updt - 1].person.contact);
         cout << "Enter new wedding date (YYYY-MM-DD): ";
         getline(cin, clientList[updt - 1].weddingDate);
+        while (!isValidDate(clientList[updt - 1].weddingDate)) {
+            cout << "Invalid date format. Enter YYYY-MM-DD: ";
+            getline(cin, clientList[updt - 1].weddingDate);
+        }
         cout << "Enter new special request: ";
         getline(cin, clientList[updt - 1].specialRequest);
         cout << "Enter new estimated number of guests: ";
@@ -983,22 +1036,23 @@ void manageClient() {
         cout << "\nUpdate vendors? (1 for Yes, 0 for No): ";
         int updateVendors;
         cin >> updateVendors;
-        if (!vendorList.empty()) {
+        if (updateVendors == 1 && !vendorList.empty()) { // Check if vendors exist
             cout << "\nAvailable Vendors:\n";
             for (size_t i = 0; i < vendorList.size(); ++i) {
-                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].name
+                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].person.name
                     << " (Cost: $" << fixed << setprecision(2) << vendorList[i].cost << ")\n";
             }
             cout << "\nEnter vendor numbers to select (e.g., 1 2 3, 0 to finish): ";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             string vendorInput;
             getline(cin, vendorInput);
+            clientList[updt - 1].selectedVendors.clear(); // Clear existing vendors
             stringstream vendorStream(vendorInput);
             size_t vendorChoice;
             while (vendorStream >> vendorChoice) {
                 if (vendorChoice > 0 && vendorChoice <= vendorList.size()) {
-                    newClient.selectedVendors.push_back(vendorList[vendorChoice - 1].name);
-                    newClient.totalPayment += vendorList[vendorChoice - 1].cost;
+                    clientList[updt - 1].selectedVendors.push_back(vendorList[vendorChoice - 1].person.name);
+                    clientList[updt - 1].totalPayment += vendorList[vendorChoice - 1].cost;
                 }
             }
         }
@@ -1685,11 +1739,11 @@ void manageVendor() {
             cout << "Enter vendor type: ";
             getline(cin, newVendor.vendorType);
             cout << "Enter vendor name: ";
-            getline(cin, newVendor.name);
+            getline(cin, newVendor.person.name);
             cout << "Enter vendor email: ";
-            getline(cin, newVendor.email);
+            getline(cin, newVendor.person.email);
             cout << "Enter vendor contact: ";
-            getline(cin, newVendor.contact);
+            getline(cin, newVendor.person.contact);
             cout << "Enter vendor cost: ";
             cin >> newVendor.cost;
             while (cin.fail() || newVendor.cost < 0) {
@@ -1717,7 +1771,7 @@ void manageVendor() {
                 break;
             }
             for (size_t i = 0; i < vendorList.size(); ++i) {
-                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].name << endl;
+                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].person.name << endl;
             }
             cout << "\nEnter number to remove vendor (0 to cancel): ";
             size_t kill;
@@ -1745,7 +1799,7 @@ void manageVendor() {
                 break;
             }
             for (size_t i = 0; i < vendorList.size(); ++i) {
-                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].name << endl;
+                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].person.name << endl;
             }
             cout << "\nEnter number to update vendor (0 to cancel): ";
             size_t updt;
@@ -1755,11 +1809,11 @@ void manageVendor() {
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 getline(cin, vendorList[updt - 1].vendorType);
                 cout << "Enter new vendor name: ";
-                getline(cin, vendorList[updt - 1].name);
+                getline(cin, vendorList[updt - 1].person.name);
                 cout << "Enter new vendor email: ";
-                getline(cin, vendorList[updt - 1].email);
+                getline(cin, vendorList[updt - 1].person.email);
                 cout << "Enter new vendor contact: ";
-                getline(cin, vendorList[updt - 1].contact);
+                getline(cin, vendorList[updt - 1].person.contact);
                 cout << "Enter new vendor cost: ";
                 cin >> vendorList[updt - 1].cost;
                 while (cin.fail() || vendorList[updt - 1].cost < 0) {
@@ -1789,9 +1843,9 @@ void manageVendor() {
                 break;
             }
             for (size_t i = 0; i < vendorList.size(); ++i) {
-                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].name << endl;
-                cout << "   Email: " << vendorList[i].email << endl;
-                cout << "   Contact: " << vendorList[i].contact << endl;
+                cout << i + 1 << ". " << vendorList[i].vendorType << " - " << vendorList[i].person.name << endl;
+                cout << "   Email: " << vendorList[i].person.email << endl;
+                cout << "   Contact: " << vendorList[i].person.contact << endl;
                 cout << "   Cost: $" << fixed << setprecision(2) << vendorList[i].cost << endl;
                 cout << endl;
             }
