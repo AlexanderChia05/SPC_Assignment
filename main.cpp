@@ -594,6 +594,7 @@ void signUp() {
     for (const auto& admin : adminList) {
         if(admin.username == newAdmin.username) {
             cout << "Username already exists. Please try again.\n";
+            cin.get();
             return;
         }
     }
@@ -649,6 +650,15 @@ void showLoginScreen() {
 
         int opt;
         cin >> opt;
+
+        if (cin.fail()) {
+            cin.clear(); // clear badbit to goodbit by resetting to initial state
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid option! Please enter a number [0-2].\n";
+            cin.get();
+            continue; // restart the loop
+        }
+
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         if (opt == 1) {
