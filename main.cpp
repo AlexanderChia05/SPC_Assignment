@@ -604,7 +604,7 @@ void signUp() {
     adminList.push_back(newAdmin);
     saveList(adminList, "admins.csv");
 
-    cout << "Account created successfully! You can now login.\n";
+    cout << "Account created successfully! You can now login.\n\n";
     cin.get();
 }
 
@@ -644,6 +644,7 @@ void showLoginScreen() {
         cout << "1. Login" << endl;
         cout << "2. Sign up" << endl;
         cout << "0. Exit" << endl;
+        cout << "Please login or sign up to continue." << endl << endl;
         cout << "Choose an option: ";
 
         int opt;
@@ -669,6 +670,8 @@ void showLoginScreen() {
         }
         else {
             cout << "Invalid option. Try again." << endl;
+            cin.get();
+            continue;
         }
     }
 }
