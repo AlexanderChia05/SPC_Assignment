@@ -581,7 +581,32 @@ void manageAdmin();
 void manageEventMonitoring();
 void manageGuests();
 void manageEventSchedule();
+void signUp();
 // void searchFun();
+
+// Sign up function
+void signUp() {
+    vector<Admin> adminList = getList<Admin>("admins.csv");
+    Admin newAdmin;
+
+    cout << "Enter Username: ";
+    getline(cin, newAdmin.username);
+    for (const auto& admin : adminList) {
+        if(admin.username == newAdmin.username) {
+            cout << "Username already exists. Please try again.\n";
+            return;
+        }
+    }
+
+    cout << "Enter Password: ";
+    getline(cin, newAdmin.password);
+
+    adminList.push_back(newAdmin);
+    saveList(adminList, "admins.csv");
+
+    cout << "Account created successfully! You can now login.\n";
+    cin.get();
+}
 
 // Login function
 bool login() {
@@ -616,16 +641,34 @@ void showLoginScreen() {
         system("cls");
         cout << strConst.LOGO_X << endl;
         cout << strConst.TITLE << endl;
-        cout << "Please login to continue." << endl << endl;
+        cout << "1. Login" << endl;
+        cout << "2. Sign up" << endl;
+        cout << "0. Exit" << endl;
+        cout << "Choose an option: ";
 
-        if (login()) {
-            showMainScreen();
-            break;
+        int opt;
+        cin >> opt;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        if (opt == 1) {
+            if (login()) {
+                showMainScreen();
+                break;
+            }
+            else {
+                cout << "CREDENTIAL DO NOT MATCH. Press Enter to try again..." << endl;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.get();
+            }
+        }
+        else if (opt == 2) {
+            signUp();
+        }
+        else if (opt == 0) {
+            exit(0);
         }
         else {
-            cout << "CREDENTIAL DO NOT MATCH. Press Enter to try again..." << endl;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
+            cout << "Invalid option. Try again." << endl;
         }
     }
 }
@@ -873,6 +916,7 @@ void manageClient() {
         paymentList.push_back(newPayment);
         saveList(paymentList, "payments.csv");
 
+        system("cls");
         // Simple Invoice Implementation
         cout << "\n=============================================" << endl;
         cout << "           CELESTIAL WEDDING EVENTS           " << endl;
