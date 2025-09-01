@@ -589,6 +589,7 @@ void signUp() {
     vector<Admin> adminList = getList<Admin>("admins.csv");
     Admin newAdmin;
 
+    cout << "================== SIGN UP ==================" << endl;
     cout << "Enter Username: ";
     getline(cin, newAdmin.username);
     for (const auto& admin : adminList) {
@@ -614,6 +615,7 @@ bool login() {
     string username, password;
     vector<Admin> adminList = getList<Admin>("admins.csv");
 
+    cout << "================== LOGIN ==================" << endl;
     cout << "Enter Username: ";
     getline(cin, username);
     cout << "Enter Password: ";
@@ -676,6 +678,9 @@ void showLoginScreen() {
             signUp();
         }
         else if (opt == 0) {
+            cout << "================= LOG OUT =================\n";
+            cout << "Exiting the system. Goodbye!" << endl;
+            cin.get();
             exit(0);
         }
         else {
