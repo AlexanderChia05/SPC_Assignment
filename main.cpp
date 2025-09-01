@@ -874,9 +874,27 @@ void manageClient() {
         saveList(paymentList, "payments.csv");
 
         // Simple Invoice Implementation
-        cout << "\n=== INVOICE ===" << endl;
-        cout << "Client: " << newClient.person.name << endl;
+        cout << "\n=============================================" << endl;
+        cout << "           CELESTIAL WEDDING EVENTS           " << endl;
+        cout << "              OFFICIAL INVOICE                " << endl;
+        cout << "=============================================" << endl;
+
+        cout << "Invoice No.: " << newPayment.paymentID << endl;
+        cout << "Invoice Date: " << newPayment.paymentDate << endl;
+        cout << "---------------------------------------------" << endl;
+
+        cout << "Client Name: " << newClient.person.name << endl;
+        cout << "Partner Name: " << newClient.partnerName << endl;
+        cout << "Email: " << newClient.person.email << endl;
+        cout << "Contact: " << newClient.person.contact << endl;
         cout << "Wedding Date: " << newClient.weddingDate << endl;
+        cout << "Guest: " << newClient.guestCount 
+            << "(Tables: " << newClient.tableCount << ")" << endl;
+        if (!newClient.specialRequest.empty()) {
+            cout << "Special Req.: " << newClient.specialRequest << endl;
+        }
+        cout << "---------------------------------------------" << endl;
+
         cout << "Venue: " << newClient.venueBooked << endl;
         cout << "Catering: " << newClient.cateringSelected << endl;
         cout << "Vendors: ";
@@ -889,19 +907,26 @@ void manageClient() {
                 if (i < newClient.selectedVendors.size() - 1) cout << ", ";
             }
         }
-        cout << endl;
+        cout << "\n---------------------------------------------" << endl;
+
         cout << "Total Payment: $" << fixed << setprecision(2) << newClient.totalPayment << endl;
         cout << "Amount Paid: $" << fixed << setprecision(2) << newClient.amountPaid << endl;
+        if (newClient.amountPaid > newClient.totalPayment) {
+            cout << "Change: " << newClient.amountPaid - newClient.totalPayment << endl;
+        }
+        else {
+            cout << "Balance Due: $" << fixed << setprecision(2) << newClient.totalPayment - newClient.amountPaid << endl;
+        }
         cout << "Payment Status: " << newClient.paymentStatus << endl;
-        cout << "===============" << endl;
+        cout << "---------------------------------------------" << endl;
+        cout << "  Thank you for choosing Celestial Wedding!  " << endl;
+        cout << "=============================================" << endl;
 
         // Save Client
         newClient.clientID = newPayment.clientID;
         clientList.push_back(newClient);
         saveList(clientList, "clients.csv");
-        cout << "\nClient created successfully! Total Payment: $" << fixed << setprecision(2) << newClient.totalPayment
-            << ", Amount Paid: $" << newClient.amountPaid << ", Status: " << newClient.paymentStatus
-            << ", Tables: " << newClient.tableCount << endl;
+        cout << "\nClient created successfully!" << endl;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cin.get();
         manageClient();
