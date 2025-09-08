@@ -128,14 +128,23 @@ struct Package {
 
     Package(const string& line) {
         if (!line.empty()) {
-            stringstream ss(line);
+            // Find last comma for price
+            size_t lastComma = line.rfind(',');
+            if (lastComma == string::npos) return;
+            string priceStr = line.substr(lastComma + 1);
+            try {
+                price = stof(priceStr);
+            } catch (...) {
+                price = 0;
+            }
+            // Now parse the rest
+            string rest = line.substr(0, lastComma);
+            stringstream ss(rest);
             ss >> packageID; ss.ignore();
             getline(ss, packageName, ',');
-            getline(ss, description, ',');
-            ss >> price;
+            getline(ss, description); // description may contain commas
         }
     }
-
     void toString(string& line) const {
         line = to_string(packageID) + "," + packageName + "," + description + "," + to_string(price);
     }
@@ -1046,7 +1055,6 @@ void manageClient() {
             manageClient();
             break;
         }
-        float oldPackagePrice = clientList[updt - 1].totalPayment;
         cout << "Enter new client name: ";
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         getline(cin, clientList[updt - 1].person.name);
@@ -1075,7 +1083,6 @@ void manageClient() {
         clientList[updt - 1].tableCount = (clientList[updt - 1].guestCount + 9) / 10;
 
         // Update Package and Payment
-        clientList[updt - 1].totalPayment = 0;
         cout << "\nUpdate venue? (1 for Yes, 0 for No): ";
         int updateVenue;
         cin >> updateVenue;
@@ -1094,7 +1101,6 @@ void manageClient() {
                 cin >> venueChoice;
                 if (venueChoice > 0 && venueChoice <= venueList.size()) {
                     clientList[updt - 1].venueBooked = venueList[venueChoice - 1].venueName;
-                    clientList[updt - 1].totalPayment += venueList[venueChoice - 1].rentalCost;
                 }
             }
         }
@@ -1116,7 +1122,6 @@ void manageClient() {
                 cin >> caterChoice;
                 if (caterChoice > 0 && caterChoice <= caterList.size()) {
                     clientList[updt - 1].cateringSelected = caterList[caterChoice - 1].caterName;
-                    clientList[updt - 1].totalPayment += caterList[caterChoice - 1].costPerPerson * clientList[updt - 1].guestCount;
                 }
             }
         }
@@ -1139,18 +1144,61 @@ void manageClient() {
             while (vendorStream >> vendorChoice) {
                 if (vendorChoice > 0 && vendorChoice <= vendorList.size()) {
                     clientList[updt - 1].selectedVendors.push_back(vendorList[vendorChoice - 1].person.name);
-                    clientList[updt - 1].totalPayment += vendorList[vendorChoice - 1].cost;
                 }
             }
         }
-        // Update Package
-        for (auto& pkg : packageList) {
-            if (pkg.packageName == clientList[updt - 1].selectedPackage) {
-                pkg.description = "Venue: " + clientList[updt - 1].venueBooked + ", Catering: " + clientList[updt - 1].cateringSelected;
-                pkg.price = clientList[updt - 1].totalPayment;
+        
+        // Recalculate totalPayment based on current selections
+        float total = 0.0f;
+
+        // Add venue cost
+        for (const auto& venue : venueList) {
+            if (venue.venueName == clientList[updt - 1].venueBooked) {
+                total += venue.rentalCost;
                 break;
             }
         }
+
+        // Add catering cost
+        for (const auto& cater : caterList) {
+            if (cater.caterName == clientList[updt - 1].cateringSelected) {
+                total += cater.costPerPerson * clientList[updt - 1].guestCount;
+                break;
+            }
+        }
+
+        // Add vendor costs
+        for (const auto& vendorName : clientList[updt - 1].selectedVendors) {
+            for (const auto& vendor : vendorList) {
+                if (vendor.person.name == vendorName) {
+                    total += vendor.cost;
+                    break;
+                }
+            }
+        }
+        clientList[updt - 1].totalPayment = total;
+
+        // Update or Create Package
+        std::string newPackageName = clientList[updt - 1].person.name + "_" + clientList[updt - 1].weddingDate;
+        bool found = false;
+        for (auto& pkg : packageList) {
+            if (pkg.packageName == clientList[updt - 1].selectedPackage) {
+                pkg.packageName = newPackageName;
+                pkg.description = "Venue: " + clientList[updt - 1].venueBooked + ", Catering: " + clientList[updt - 1].cateringSelected;
+                pkg.price = clientList[updt - 1].totalPayment;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            Package newPkg;
+            newPkg.packageID = packageList.empty() ? 1 : packageList.back().packageID + 1;
+            newPkg.packageName = newPackageName;
+            newPkg.description = "Venue: " + clientList[updt - 1].venueBooked + ", Catering: " + clientList[updt - 1].cateringSelected;
+            newPkg.price = clientList[updt - 1].totalPayment;
+            packageList.push_back(newPkg);
+        }
+        clientList[updt - 1].selectedPackage = newPackageName;
         saveList(packageList, "packages.csv");
         saveList(clientList, "clients.csv");
         cout << "\nClient updated successfully! New Total Payment: $" << fixed << setprecision(2) << clientList[updt - 1].totalPayment << endl;
@@ -1191,8 +1239,21 @@ void manageClient() {
                 }
             }
             cout << endl;
+            // Update payment status before displaying
+            if (clientList[i].amountPaid >= clientList[i].totalPayment) {
+                clientList[i].paymentStatus = "Fully PAID";
+            }
+            else if (clientList[i].amountPaid >= clientList[i].totalPayment * 0.1) {
+                clientList[i].paymentStatus = "Deposit PAID";
+            }
+            else {
+                clientList[i].paymentStatus = "NONE";
+            }
             cout << "   Total Payment: $" << fixed << setprecision(2) << clientList[i].totalPayment << endl;
             cout << "   Amount Paid: $" << fixed << setprecision(2) << clientList[i].amountPaid << endl;
+            if (clientList[i].amountPaid > clientList[i].totalPayment) {
+                cout << "   Return: $" << fixed << setprecision(2) << clientList[i].amountPaid - clientList[i].totalPayment << endl;
+            }
             cout << "   Payment Status: " << clientList[i].paymentStatus << endl;
             cout << endl;
         }
@@ -1253,6 +1314,7 @@ void managePackage() {
     vector<Package> packageList = getList<Package>("packages.csv");
     vector<Venue> venueList = getList<Venue>("venues.csv");
     vector<Cater> caterList = getList<Cater>("caterings.csv");
+    vector<Vendor> vendorList = getList<Vendor>("vendors.csv");
 
     system("cls");
     cout << strConst.PackageMenu << endl;
@@ -1317,6 +1379,10 @@ void managePackage() {
             break;
         }
         newPackage.price = venueList[venueChoice - 1].rentalCost + (caterList[caterChoice - 1].costPerPerson * guestCount);
+        for (const auto& vendor : vendorList) {
+            newPackage.price += vendor.cost;
+        }   
+        
         newPackage.packageID = packageList.empty() ? 1 : packageList.back().packageID + 1;
         newPackage.description = "Venue: " + venueList[venueChoice - 1].venueName + ", Catering: " + caterList[caterChoice - 1].caterName;
         packageList.push_back(newPackage);
@@ -1410,8 +1476,7 @@ void managePackage() {
                 cout << "\nVenue unchanged." << endl;
             }
             else {
-                packageList[updt - 1].price -= packageList[updt - 1].price;
-                packageList[updt - 1].price += venueList[venueChoice - 1].rentalCost;
+                packageList[updt - 1].price = venueList[venueChoice - 1].rentalCost;
                 packageList[updt - 1].description = "Venue: " + venueList[venueChoice - 1].venueName + ", Catering: " + packageList[updt - 1].description.substr(packageList[updt - 1].description.find("Catering:"));
             }
         }
