@@ -2677,6 +2677,7 @@ void manageEventSchedule() {
         cout << "Amount Paid: $" << fixed << setprecision(2) << client.amountPaid << endl;
         cout << "\n=== Event Schedule ===" << endl;
         cout << "Enter schedule time (HH:MM): ";
+        cin.ignore();
         getline(cin, newSchedule.time);
         cout << "Enter activity: ";
         getline(cin, newSchedule.activity);
