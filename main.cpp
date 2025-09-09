@@ -891,7 +891,7 @@ void manageClient() {
             }
         }
 
-        
+
         for (auto& pkg : packageList) {
             if (pkg.packageName == newClient.selectedPackage) {
                 pkg.price = newClient.totalPayment;
@@ -1387,10 +1387,7 @@ void managePackage() {
             managePackage();
             break;
         }
-        newPackage.price = venueList[venueChoice - 1].rentalCost + (caterList[caterChoice - 1].costPerPerson * guestCount);
-        for (const auto& vendor : vendorList) {
-            newPackage.price += vendor.cost;
-        }   
+        newPackage.price = venueList[venueChoice - 1].rentalCost + (caterList[caterChoice - 1].costPerPerson * guestCount); 
         
         newPackage.packageID = packageList.empty() ? 1 : packageList.back().packageID + 1;
         newPackage.description = "Venue: " + venueList[venueChoice - 1].venueName + ", Catering: " + caterList[caterChoice - 1].caterName;
