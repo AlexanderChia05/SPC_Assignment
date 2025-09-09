@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include "rating.h"
+#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -11,52 +12,6 @@
 using namespace std;
 
 // Struct definitions
-struct Person {
-    string name;
-    string email;
-    string contact;
-
-    Person() = default;
-
-    Person(const string& line) {
-        if (!line.empty()) {
-            stringstream ss(line);
-            getline(ss, name, ',');
-            getline(ss, email, ',');
-            getline(ss, contact);
-        }
-    }
-
-    void toString(string& line) const {
-        line = name + "," + email + "," + contact;
-    }
-};
-
-struct Vendor {
-    int vendorID = 0;
-    Person person;
-    string vendorType;
-    float cost = 0;
-
-    Vendor() = default;
-
-    Vendor(const string& line) {
-        if (!line.empty()) {
-            stringstream ss(line);
-            ss >> vendorID; ss.ignore();
-            getline(ss, vendorType, ',');
-            getline(ss, person.name, ',');
-            getline(ss, person.email, ',');
-            getline(ss, person.contact, ',');
-            ss >> cost;
-        }
-    }
-
-    void toString(string& line) const {
-        line = to_string(vendorID) + "," + vendorType + "," + person.name + "," + person.email + "," + person.contact + "," + to_string(cost);
-    }
-};
-
 struct Client {
     int clientID = 0;
     Person person;
@@ -541,40 +496,6 @@ struct StringConst {
         " | 0. Back to Main Menu                    |  \n"
         " +-----------------------------------------+    ";
 };
-
-// Template function to read things
-template <typename T>
-vector<T> getList(string filename) {
-    ifstream file(filename);
-    vector<T> list;
-
-    if (file.is_open()) {
-        string line;
-        while (getline(file, line)) {
-            list.emplace_back(line);
-        }
-        file.close();
-    }
-    return list;
-}
-
-// Template function to save things
-template <typename T>
-void saveList(const vector<T>& list, const string& filename) {
-    ofstream file(filename);
-
-    if (file.is_open()) {
-        for (const auto& r : list) {
-            string line;
-            r.toString(line);
-            file << line << endl;
-        }
-        file.close();
-    }
-    else {
-        cerr << "Error opening file: " << filename << endl;
-    }
-}
 
 // Function declarations
 bool login();
@@ -2017,6 +1938,13 @@ void manageVendor() {
             manageVendor();
             break;
         }
+        case 5:
+            rateVendor(vendorList, "vendors.csv");
+            break;
+        case 6:
+            showTopVendors(vendorList);
+            cin.get();
+            break;
         default:
             cout << "Invalid option. Please try again." << endl;
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
