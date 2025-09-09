@@ -405,9 +405,7 @@ struct StringConst {
         " +-----------------------------------------+  \n"
         " | 4. Show All Vendors                     |  \n"
         " +-----------------------------------------+  \n"
-        " | 5. Rate Vendor                          |  \n"
-        " +-----------------------------------------+  \n"
-        " | 6. Show Top Vendors                     |  \n"
+        " | 5. Show Top Vendors                     |  \n"
         " +-----------------------------------------+  \n"
         " | 0. Back to Main Menu                    |  \n"
         " +-----------------------------------------+    ";
@@ -518,7 +516,143 @@ void manageEventMonitoring();
 void manageGuests();
 void manageEventSchedule();
 void signUp();
+void showUserScreen();
+void showRoleSelection();
 // void searchFun();
+
+void showRoleSelection() {
+    int choice;
+    while (true) {
+        system("cls");
+        cout << "================= WELCOME =================" << endl;
+        cout << "1. Admin" << endl;
+        cout << "2. User (Guest/Client)" << endl;
+        cout << "0. Exit" << endl;
+        cout << "Choose your role: ";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        if (choice == 1) {
+            showLoginScreen();  // Admin must login
+        } else if (choice == 2) {
+            showUserScreen();   // Direct to user functions (no signup/login)
+        } else if (choice == 0) {
+            exit(0);
+        } else {
+            cout << "Invalid option. Try again." << endl;
+            cin.get();
+        }
+    }
+}
+
+// View Venues
+void showVenues() {
+    vector<Venue> venueList = getList<Venue>("venues.csv");
+    system("cls");
+    if (venueList.empty()) {
+        cout << "No venues available." << endl;
+    } else {
+        cout << "\n=== Venues ===\n";
+        for (size_t i = 0; i < venueList.size(); i++) {
+            auto &v = venueList[i];
+            cout << i + 1 << ". Name: " << v.venueName 
+                 << " | Location: " << v.location 
+                 << " | Capacity: " << v.capacity 
+                 << " | Cost: $" << fixed << setprecision(2) << v.rentalCost << "\n";
+        }
+    }
+    cin.get();
+}
+
+// View Catering
+void showCatering() {
+    vector<Cater> caterList = getList<Cater>("caterings.csv");
+    system("cls");
+    if (caterList.empty()) {
+        cout << "No catering options available." << endl;
+    } else {
+        cout << "\n=== Catering Options ===\n";
+        for (size_t i = 0; i < caterList.size(); i++) {
+            auto &c = caterList[i];
+            cout << i + 1 <<". Name: " << c.caterName 
+                 << " | Menu: " << c.menuDescription 
+                 << " | Cost per person: $" << fixed << setprecision(2) << c.costPerPerson << "\n";
+        }
+    }
+    cin.get();
+}
+
+// View Packages
+void showPackages() {
+    vector<Package> packageList = getList<Package>("packages.csv");
+    system("cls");
+    if (packageList.empty()) {
+        cout << "No packages available." << endl;
+    } else {
+        cout << "\n=== Wedding Packages ===\n";
+        for (size_t i = 0; i < packageList.size(); i++) {
+            auto &p = packageList[i];
+            cout << i + 1 << ". Name: " << p.packageName 
+                 << " | Description: " << p.description 
+                 << " | Price: $" << fixed << setprecision(2) << p.price << "\n";
+        }
+    }
+    cin.get();
+}
+
+// View Vendors
+void showVendors() {
+    vector<Vendor> vendorList = getList<Vendor>("vendors.csv");
+    system("cls");
+    if (vendorList.empty()) {
+        cout << "No vendors available." << endl;
+    } else {
+        cout << "\n=== Vendors ===\n";
+        for (size_t i = 0; i < vendorList.size(); i++) {
+            auto &v = vendorList[i];
+            cout << i + 1 << ". " << v.vendorType << " - " << v.person.name 
+                 << " | Cost: $" << fixed << setprecision(2) << v.cost << "\n";
+        }
+    }
+    cin.get();
+}
+
+void showUserScreen() {
+    int choice;
+    while (true) {
+        system("cls");
+        cout << "================= USER MENU =================" << endl;
+        cout << "1. View Available Venues" << endl;
+        cout << "2. View Catering Options" << endl;
+        cout << "3. View Wedding Packages" << endl;
+        cout << "4. View Vendors" << endl;
+        cout << "5. Rate a Vendor" << endl;
+        cout << "6. Show Top Vendors" << endl;
+        cout << "0. Back to Role Selection" << endl;
+        cout << "Choose an option: ";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        switch (choice) {
+            case 1: showVenues(); break;
+            case 2: showCatering(); break;
+            case 3: showPackages(); break;
+            case 4: showVendors(); break;
+            case 5: {
+                vector<Vendor> vendorList = getList<Vendor>("vendors.csv");
+                rateVendor(vendorList, "vendors.csv"); break;
+            }
+            case 6: {
+                vector<Vendor> vendorList = getList<Vendor>("vendors.csv");
+                showTopVendors(vendorList);
+                cin.get(); 
+                break;
+            }
+            case 0: return;
+            default: cout << "Invalid choice." << endl; cin.get();
+        }
+    }
+}
 
 // Sign up function
 void signUp() {
@@ -614,10 +748,8 @@ void showLoginScreen() {
             signUp();
         }
         else if (opt == 0) {
-            cout << "================= LOG OUT =================\n";
-            cout << "Exiting the system. Goodbye!" << endl;
-            cin.get();
-            exit(0);
+            system("cls");
+            showRoleSelection();
         }
         else {
             cout << "Invalid option. Try again." << endl;
@@ -641,10 +773,7 @@ void showMainScreen() {
         switch (x) {
         case 0:
             system("cls");
-            cout << strConst.LOGO_X << endl;
-            cout << strConst.TITLE << endl << endl;
-            cout << "\nExiting the system. Goodbye!" << endl;
-            exit(0);
+            showRoleSelection();
             break;
         case 1:
             manageClient();
@@ -1943,9 +2072,6 @@ void manageVendor() {
             break;
         }
         case 5:
-            rateVendor(vendorList, "vendors.csv");
-            break;
-        case 6:
             showTopVendors(vendorList);
             cin.get();
             break;
@@ -2889,7 +3015,7 @@ void manageEventSchedule() {
 }
 
 int main() {
-    showLoginScreen();
+    showRoleSelection();
     system("pause");
     return 0;
 }
