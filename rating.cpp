@@ -1,6 +1,7 @@
 #include "rating.h"
 #include <iomanip>
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 
@@ -19,17 +20,56 @@ void rateVendor(vector<Vendor>& vendorList, const string& filename) {
              << vendorList[i].ratingCount << " reviews)\n";
     }
 
-    cout << "\nSelect vendor number to rate (0 to cancel): ";
     int choice;
-    cin >> choice;
-    if (choice <= 0 || choice > (int)vendorList.size()) return;
+    string input;
+    while (true) {
+        cout << "\nSelect vendor number to rate (0 to cancel): ";
+        cin >> input;
 
-    cout << "Enter rating (1–5): ";
-    int stars;
-    cin >> stars;
-    while (stars < 1 || stars > 5) {
-        cout << "Invalid. Enter rating (1–5): ";
-        cin >> stars;
+        // Check if input is all digits (or "0")
+        bool valid = !input.empty() && all_of(input.begin(), input.end(), ::isdigit);
+
+        if (!valid) {
+            cout << "Invalid input. Please enter a whole number between 1 and " << vendorList.size() << " (0 to cancel).\n";
+            continue;
+        }
+
+        // Convert to int
+        choice = stoi(input);
+
+        if (choice == 0) {
+            cout << "Cancelled!\n";
+            return;
+        }
+        else if (choice < 0 || choice > (int)vendorList.size()) {
+            cout << "Invalid input. Enter a number between 1 and " << (int)vendorList.size() << " (0 to cancel).\n ";
+            continue;
+        }
+        else 
+            break;
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    double stars;
+    while (true) {
+        cout << "Enter rating (1-5) [0 to cancel]: ";
+        if (!(cin >> stars)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Enter a number between 1 and 5 (0 to cancel).\n";
+            continue;
+        }
+        else if (stars == 0) {
+            cout << "Rating cancelled\n";
+            return;
+        }
+        else if (stars < 1 || stars > 5) {
+            cout << "Invalid range. Enter a number between 1 and 5 (0 to cancel).\n";
+            continue;
+        }
+        else 
+            break;
     }
 
     Vendor& v = vendorList[choice - 1];
