@@ -200,6 +200,7 @@ struct Cater {
 
 struct GuestRecord {
     int guestID;
+    int clientID;
     Person person;
     string rsvpStatus;
     string mealPreference;
@@ -211,6 +212,7 @@ struct GuestRecord {
         if (!line.empty()) {
             stringstream ss(line);
             ss >> guestID; ss.ignore();
+            ss >> clientID; ss.ignore();
             getline(ss, person.name, ',');
             getline(ss, person.email, ',');
             getline(ss, person.contact, ',');
@@ -221,7 +223,7 @@ struct GuestRecord {
     }
 
     void toString(string& line) const {
-        line = to_string(guestID) + "," + person.name + "," + person.email + "," + person.contact + "," +
+        line = to_string(guestID) + "," + to_string(clientID) + "," + person.name + "," + person.email + "," + person.contact + "," +
             rsvpStatus + "," + mealPreference + "," + to_string(tableNumber);
     }
 };
@@ -2463,6 +2465,7 @@ void manageGuests() {
             getline(ss, rsvp);
             GuestRecord guest;
             guest.guestID = newGuestID++;
+            guest.clientID = clientList[clientChoice - 1].clientID;
             guest.person.name = name;
             guest.person.contact = contact;
             guest.rsvpStatus = rsvp;
@@ -2500,8 +2503,7 @@ void manageGuests() {
         }
         vector<GuestRecord> clientGuests;
         for (const auto& guest : guestList) {
-            if (guest.guestID >= clientList[clientChoice - 1].clientID * 1000 &&
-                guest.guestID < (clientList[clientChoice - 1].clientID + 1) * 1000) {
+            if (guest.clientID == clientList[clientChoice - 1].clientID) {
                 clientGuests.push_back(guest);
             }
         }
@@ -2565,8 +2567,7 @@ void manageGuests() {
         }
         vector<GuestRecord> clientGuests;
         for (const auto& guest : guestList) {
-            if (guest.guestID >= clientList[clientChoice - 1].clientID * 1000 &&
-                guest.guestID < (clientList[clientChoice - 1].clientID + 1) * 1000) {
+            if (guest.clientID == clientList[clientChoice - 1].clientID) {
                 clientGuests.push_back(guest);
             }
         }
