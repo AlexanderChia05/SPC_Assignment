@@ -891,6 +891,15 @@ void manageClient() {
             }
         }
 
+        
+        for (auto& pkg : packageList) {
+            if (pkg.packageName == newClient.selectedPackage) {
+                pkg.price = newClient.totalPayment;
+                break;
+            }
+        }
+        saveList(packageList, "packages.csv");
+
         // Payment Session
         cout << "\n=== Payment Session ===" << endl;
         cout << "Total Payment Required: $" << fixed << setprecision(2) << newClient.totalPayment << endl;
@@ -1427,7 +1436,7 @@ void managePackage() {
         cin.get();
         managePackage();
         break;
-    case 3:
+    case 3: 
         system("cls");
         if (packageList.empty()) {
             cout << "\nNo packages available to update." << endl;
@@ -1515,6 +1524,7 @@ void managePackage() {
                 }
             }
         }
+        
         saveList(packageList, "packages.csv");
         cout << "\nPackage updated successfully! New Price: $" << fixed << setprecision(2) << packageList[updt - 1].price << endl;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
